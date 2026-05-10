@@ -1,0 +1,5 @@
+"Model","Accuracy","Sensitivity","Specificity","Precision","F1"
+"K-Nearest Neighbors",0.9212,0.0063,0.9995,0.5,0.0125
+"Decision Tree",0.9212,0,1,NA,NA
+"Boosting",0.9232,0.1206,0.9919,0.5588,0.1984
+"Logistic Regression",NA,NA,NA,NA,NA

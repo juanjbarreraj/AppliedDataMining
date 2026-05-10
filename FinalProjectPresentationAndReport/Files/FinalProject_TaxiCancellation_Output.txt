@@ -1,0 +1,519 @@
+============================================================
+Final Project - Taxi Cancellation Prediction
+Juan Barrera
+MIS545.EA: Applied Data Mining
+============================================================
+
+============================================================
+1. Loading Dataset
+============================================================
+
+First six rows of the dataset:
+  row. user_id vehicle_model_id package_id travel_type_id from_area_id
+1    1   17712               12         NA              2         1021
+2    2   17037               12         NA              2          455
+3    3     761               12         NA              2          814
+4    4     868               12         NA              2          297
+5    5   21716               28         NA              2         1237
+6    6   38966               12         NA              2           61
+  to_area_id from_city_id to_city_id    from_date     to_date
+1       1323           NA         NA 1/1/13 22:33            
+2       1330           NA         NA 1/1/13 12:43            
+3        393           NA         NA  1/2/13 0:28 1/3/13 0:00
+4        212           NA         NA 1/1/13 13:12            
+5        330           NA         NA 1/1/13 16:33            
+6        393           NA         NA 1/1/13 18:00            
+  online_booking mobile_site_booking booking_created from_lat from_long
+1              0                   0     1/1/13 8:01 13.02853  77.54625
+2              0                   0     1/1/13 9:59 12.99987  77.67812
+3              1                   0    1/1/13 12:14 12.90899  77.68890
+4              0                   0    1/1/13 12:42 12.99789  77.61488
+5              0                   0    1/1/13 15:07 12.92645  77.61206
+6              0                   0    1/1/13 15:11 12.96298  77.71229
+    to_lat  to_long Car_Cancellation
+1 12.86980 77.65321                0
+2 12.95343 77.70651                0
+3 13.19956 77.70688                0
+4 12.99474 77.60797                0
+5 12.85883 77.58913                0
+6 13.19956 77.70688                0
+
+Dataset dimensions:
+[1] 10000    19
+
+Column names:
+ [1] "row."                "user_id"             "vehicle_model_id"   
+ [4] "package_id"          "travel_type_id"      "from_area_id"       
+ [7] "to_area_id"          "from_city_id"        "to_city_id"         
+[10] "from_date"           "to_date"             "online_booking"     
+[13] "mobile_site_booking" "booking_created"     "from_lat"           
+[16] "from_long"           "to_lat"              "to_long"            
+[19] "Car_Cancellation"   
+
+Structure of the dataset:
+'data.frame':	10000 obs. of  19 variables:
+ $ row.               : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ user_id            : int  17712 17037 761 868 21716 38966 22196 22200 22201 22202 ...
+ $ vehicle_model_id   : int  12 12 12 12 28 12 12 12 12 12 ...
+ $ package_id         : int  NA NA NA NA NA NA NA NA 1 NA ...
+ $ travel_type_id     : int  2 2 2 2 2 2 2 2 3 2 ...
+ $ from_area_id       : int  1021 455 814 297 1237 61 409 1371 1323 1017 ...
+ $ to_area_id         : int  1323 1330 393 212 330 393 1194 839 NA 496 ...
+ $ from_city_id       : int  NA NA NA NA NA NA NA NA NA NA ...
+ $ to_city_id         : int  NA NA NA NA NA NA NA NA NA NA ...
+ $ from_date          : chr  "1/1/13 22:33" "1/1/13 12:43" "1/2/13 0:28" "1/1/13 13:12" ...
+ $ to_date            : chr  "" "" "1/3/13 0:00" "" ...
+ $ online_booking     : int  0 0 1 0 0 0 0 1 1 0 ...
+ $ mobile_site_booking: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ booking_created    : chr  "1/1/13 8:01" "1/1/13 9:59" "1/1/13 12:14" "1/1/13 12:42" ...
+ $ from_lat           : num  13 13 12.9 13 12.9 ...
+ $ from_long          : num  77.5 77.7 77.7 77.6 77.6 ...
+ $ to_lat             : num  12.9 13 13.2 13 12.9 ...
+ $ to_long            : num  77.7 77.7 77.7 77.6 77.6 ...
+ $ Car_Cancellation   : int  0 0 0 0 0 0 0 0 0 0 ...
+NULL
+
+============================================================
+2. Target Variable Summary: Car_Cancellation
+============================================================
+
+Cancellation frequency table:
+
+   0    1 
+9257  743 
+
+Cancellation percentage table:
+
+    0     1 
+92.57  7.43 
+
+Interpretation:
+The target variable is Car_Cancellation.
+A value of 0 means the booking was not cancelled.
+A value of 1 means the booking was cancelled.
+The distribution shows that the dataset is highly imbalanced because most bookings were not cancelled.
+This means accuracy alone can be misleading when evaluating the models.
+
+============================================================
+3. Data Preprocessing
+============================================================
+
+Missing values after replacement:
+[1] 0
+
+Variables converted to factors:
+vehicle_model_id, package_id, travel_type_id
+
+============================================================
+4. Feature Engineering
+============================================================
+
+Created new date-based variables:
+- from_date_DOW
+- from_date_Hour
+- booking_created_DOW
+
+============================================================
+5. Trip Length Calculation
+============================================================
+
+Trip length summary:
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+   0.000    9.764   21.118 1815.273   35.069 8693.753 
+
+Interpretation:
+The trip_length variable estimates the distance between pickup and drop-off locations using latitude and longitude.
+This feature may help the models because longer or shorter trips may have different cancellation patterns.
+
+============================================================
+6. Variable Selection
+============================================================
+
+All available variables after preprocessing:
+      [,1]                 
+ [1,] "row."               
+ [2,] "user_id"            
+ [3,] "vehicle_model_id"   
+ [4,] "package_id"         
+ [5,] "travel_type_id"     
+ [6,] "from_area_id"       
+ [7,] "to_area_id"         
+ [8,] "from_city_id"       
+ [9,] "to_city_id"         
+[10,] "from_date"          
+[11,] "to_date"            
+[12,] "online_booking"     
+[13,] "mobile_site_booking"
+[14,] "booking_created"    
+[15,] "from_lat"           
+[16,] "from_long"          
+[17,] "to_lat"             
+[18,] "to_long"            
+[19,] "Car_Cancellation"   
+[20,] "from_date_DOW"      
+[21,] "from_date_Hour"     
+[22,] "booking_created_DOW"
+[23,] "trip_length"        
+
+Variables selected for modeling:
+ [1] "vehicle_model_id"    "package_id"          "travel_type_id"     
+ [4] "from_area_id"        "to_area_id"          "from_city_id"       
+ [7] "to_city_id"          "online_booking"      "mobile_site_booking"
+[10] "from_date_DOW"       "from_date_Hour"      "booking_created_DOW"
+[13] "trip_length"         "Car_Cancellation"   
+
+Final modeling dataset structure:
+'data.frame':	10000 obs. of  14 variables:
+ $ vehicle_model_id   : Factor w/ 20 levels "1","10","12",..: 3 3 3 3 8 3 3 3 3 3 ...
+ $ package_id         : Factor w/ 8 levels "0","1","2","3",..: 1 1 1 1 1 1 1 1 2 1 ...
+ $ travel_type_id     : Factor w/ 3 levels "1","2","3": 2 2 2 2 2 2 2 2 3 2 ...
+ $ from_area_id       : num  1021 455 814 297 1237 ...
+ $ to_area_id         : num  1323 1330 393 212 330 ...
+ $ from_city_id       : num  0 0 0 0 0 0 0 0 0 0 ...
+ $ to_city_id         : num  0 0 0 0 0 0 0 0 0 0 ...
+ $ online_booking     : int  0 0 1 0 0 0 0 1 1 0 ...
+ $ mobile_site_booking: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ from_date_DOW      : Factor w/ 7 levels "Friday","Monday",..: 6 6 7 6 6 6 6 7 6 7 ...
+ $ from_date_Hour     : num  22 12 0 13 16 18 16 10 19 5 ...
+ $ booking_created_DOW: Factor w/ 7 levels "Friday","Monday",..: 6 6 6 6 6 6 6 6 6 6 ...
+ $ trip_length        : num  21.139 6.017 32.405 0.827 7.928 ...
+ $ Car_Cancellation   : num  0 0 0 0 0 0 0 0 0 0 ...
+NULL
+
+============================================================
+7. Training and Validation Split
+============================================================
+
+Training dataset dimensions:
+[1] 6000   14
+
+Validation dataset dimensions:
+[1] 4000   14
+
+Training target distribution:
+
+   0    1 
+5572  428 
+
+Validation target distribution:
+
+   0    1 
+3685  315 
+
+============================================================
+8. Model 1: K-Nearest Neighbors
+============================================================
+
+KNN model results:
+k-Nearest Neighbors 
+
+6000 samples
+  13 predictor
+   2 classes: '0', '1' 
+
+No pre-processing
+Resampling: Bootstrapped (25 reps) 
+Summary of sample sizes: 6000, 6000, 6000, 6000, 6000, 6000, ... 
+Resampling results across tuning parameters:
+
+  k   Accuracy   Kappa     
+   1  0.8782123  0.07913115
+  10  0.9217501  0.02450335
+
+Accuracy was used to select the optimal model using the largest value.
+The final value used for the model was k = 10.
+
+============================================================
+Model Evaluation: K-Nearest Neighbors 
+============================================================
+
+Confusion Matrix:
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    0    1
+         0 3683  313
+         1    2    2
+                                          
+               Accuracy : 0.9212          
+                 95% CI : (0.9125, 0.9294)
+    No Information Rate : 0.9212          
+    P-Value [Acc > NIR] : 0.515           
+                                          
+                  Kappa : 0.0106          
+                                          
+ Mcnemar's Test P-Value : <2e-16          
+                                          
+            Sensitivity : 0.006349        
+            Specificity : 0.999457        
+         Pos Pred Value : 0.500000        
+         Neg Pred Value : 0.921672        
+             Prevalence : 0.078750        
+         Detection Rate : 0.000500        
+   Detection Prevalence : 0.001000        
+      Balanced Accuracy : 0.502903        
+                                          
+       'Positive' Class : 1               
+                                          
+
+Gains Table:
+Depth                            Cume   Cume Pct                     Mean
+ of           Cume     Mean      Mean   of Total    Lift   Cume     Model
+File     N      N      Resp      Resp      Resp    Index   Lift     Score
+-------------------------------------------------------------------------
+  16   623    623      0.15      0.15      28.9%     185    185      0.25
+  41  1001   1624      0.08      0.11      55.9%     108    138      0.10
+ 100  2376   4000      0.06      0.08     100.0%      74    100      0.00
+  NA    NA     NA        NA        NA        NA%      NA     NA        NA
+  NA    NA     NA        NA        NA        NA%      NA     NA        NA
+  NA    NA     NA        NA        NA        NA%      NA     NA        NA
+  NA    NA     NA        NA        NA        NA%      NA     NA        NA
+  NA    NA     NA        NA        NA        NA%      NA     NA        NA
+  NA    NA     NA        NA        NA        NA%      NA     NA        NA
+  NA    NA     NA        NA        NA        NA%      NA     NA        NA
+
+============================================================
+9. Model 2: Decision Tree
+============================================================
+
+Decision Tree complexity parameter table:
+  CP nsplit rel error xerror xstd
+1  0      0         1      0    0
+
+Best CP selected for pruning:
+[1] 0
+
+Pruned Decision Tree Summary:
+n= 6000 
+
+node), split, n, loss, yval, (yprob)
+      * denotes terminal node
+
+1) root 6000 428 0 (0.92866667 0.07133333) *
+
+============================================================
+Model Evaluation: Decision Tree 
+============================================================
+
+Confusion Matrix:
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    0    1
+         0 3685  315
+         1    0    0
+                                          
+               Accuracy : 0.9212          
+                 95% CI : (0.9125, 0.9294)
+    No Information Rate : 0.9212          
+    P-Value [Acc > NIR] : 0.515           
+                                          
+                  Kappa : 0               
+                                          
+ Mcnemar's Test P-Value : <2e-16          
+                                          
+            Sensitivity : 0.00000         
+            Specificity : 1.00000         
+         Pos Pred Value :     NaN         
+         Neg Pred Value : 0.92125         
+             Prevalence : 0.07875         
+         Detection Rate : 0.00000         
+   Detection Prevalence : 0.00000         
+      Balanced Accuracy : 0.50000         
+                                          
+       'Positive' Class : 1               
+                                          
+
+Gains Table:
+Depth                            Cume   Cume Pct                     Mean
+ of           Cume     Mean      Mean   of Total    Lift   Cume     Model
+File     N      N      Resp      Resp      Resp    Index   Lift     Score
+-------------------------------------------------------------------------
+ 100  4000   4000      0.08      0.08     100.0%     100    100      0.07
+
+Decision tree plot saved as: Decision_Tree_Plot.png
+
+============================================================
+10. Model 3: Boosting
+============================================================
+
+Boosting variable importance:
+booking_created_DOW        from_area_id        from_city_id 
+          9.2179916          11.8939596           2.2379832 
+      from_date_DOW      from_date_Hour mobile_site_booking 
+          6.6958927           8.5762178           3.0172417 
+     online_booking          package_id          to_area_id 
+          7.7960019           2.5782656           8.9788790 
+         to_city_id      travel_type_id         trip_length 
+          0.2518641           0.0000000          20.1295707 
+   vehicle_model_id 
+         18.6261318 
+
+============================================================
+Model Evaluation: Boosting 
+============================================================
+
+Confusion Matrix:
+Confusion Matrix and Statistics
+
+          Reference
+Prediction    0    1
+         0 3655  277
+         1   30   38
+                                          
+               Accuracy : 0.9232          
+                 95% CI : (0.9146, 0.9313)
+    No Information Rate : 0.9212          
+    P-Value [Acc > NIR] : 0.3323          
+                                          
+                  Kappa : 0.1754          
+                                          
+ Mcnemar's Test P-Value : <2e-16          
+                                          
+            Sensitivity : 0.12063         
+            Specificity : 0.99186         
+         Pos Pred Value : 0.55882         
+         Neg Pred Value : 0.92955         
+             Prevalence : 0.07875         
+         Detection Rate : 0.00950         
+   Detection Prevalence : 0.01700         
+      Balanced Accuracy : 0.55625         
+                                          
+       'Positive' Class : 1               
+                                          
+
+Gains Table:
+Depth                            Cume   Cume Pct                     Mean
+ of           Cume     Mean      Mean   of Total    Lift   Cume     Model
+File     N      N      Resp      Resp      Resp    Index   Lift     Score
+-------------------------------------------------------------------------
+  10   400    400      0.30      0.30      37.8%     378    378      0.45
+  20   400    800      0.17      0.23      59.0%     213    295      0.37
+  30   400   1200      0.09      0.18      70.5%     114    235      0.33
+  40   400   1600      0.06      0.15      78.1%      76    195      0.30
+  50   400   2000      0.06      0.14      85.7%      76    171      0.27
+  60   400   2400      0.06      0.12      93.3%      76    156      0.24
+  70   400   2800      0.03      0.11      96.5%      32    138      0.21
+  80   400   3200      0.01      0.10      98.1%      16    123      0.18
+  90   400   3600      0.01      0.09      99.4%      13    110      0.14
+ 100   400   4000      0.01      0.08     100.0%       6    100      0.08
+
+============================================================
+11. Model 4: Logistic Regression
+============================================================
+
+Logistic Regression Summary:
+
+Call:
+glm(formula = Car_Cancellation ~ ., family = binomial, data = train.df)
+
+Coefficients: (1 not defined because of singularities)
+                               Estimate Std. Error z value Pr(>|z|)    
+(Intercept)                  -1.933e+01  3.956e+03  -0.005 0.996101    
+vehicle_model_id10           -6.699e-01  4.093e+03   0.000 0.999869    
+vehicle_model_id12            1.404e+01  3.956e+03   0.004 0.997168    
+vehicle_model_id13           -6.922e-01  5.595e+03   0.000 0.999901    
+vehicle_model_id17           -7.598e-01  4.248e+03   0.000 0.999857    
+vehicle_model_id23           -7.672e-01  3.997e+03   0.000 0.999847    
+vehicle_model_id24            1.118e+01  3.956e+03   0.003 0.997744    
+vehicle_model_id28            1.315e+01  3.956e+03   0.003 0.997349    
+vehicle_model_id30            4.958e-02  4.807e+03   0.000 0.999992    
+vehicle_model_id54           -9.687e-02  4.140e+03   0.000 0.999981    
+vehicle_model_id64           -1.286e+00  4.182e+03   0.000 0.999755    
+vehicle_model_id65            1.372e+01  3.956e+03   0.003 0.997234    
+vehicle_model_id70           -6.161e-01  5.595e+03   0.000 0.999912    
+vehicle_model_id85            1.071e+01  3.956e+03   0.003 0.997840    
+vehicle_model_id86           -3.241e-01  4.084e+03   0.000 0.999937    
+vehicle_model_id87            1.387e+01  3.956e+03   0.004 0.997202    
+vehicle_model_id89            1.451e+01  3.956e+03   0.004 0.997073    
+vehicle_model_id90           -1.177e+00  3.991e+03   0.000 0.999765    
+vehicle_model_id91            1.567e+01  3.956e+03   0.004 0.996840    
+package_id1                   6.817e-01  7.604e-01   0.896 0.370003    
+package_id2                   2.567e-02  8.062e-01   0.032 0.974596    
+package_id3                   1.234e+00  9.084e-01   1.358 0.174341    
+package_id4                  -1.567e-01  1.247e+00  -0.126 0.899971    
+package_id5                  -1.486e+01  3.956e+03  -0.004 0.997003    
+package_id6                   2.100e+00  8.305e-01   2.529 0.011449 *  
+package_id7                   1.290e+00  1.292e+00   0.999 0.317960    
+travel_type_id2               1.024e+00  2.479e+00   0.413 0.679672    
+travel_type_id3                      NA         NA      NA       NA    
+from_area_id                  1.724e-05  1.250e-04   0.138 0.890264    
+to_area_id                    6.645e-04  1.337e-04   4.971 6.68e-07 ***
+from_city_id                  2.679e-02  7.456e-03   3.593 0.000327 ***
+to_city_id                    3.834e-03  7.831e-03   0.490 0.624444    
+online_booking                1.334e+00  1.166e-01  11.440  < 2e-16 ***
+mobile_site_booking           1.365e+00  2.047e-01   6.667 2.62e-11 ***
+from_date_DOWMonday           6.979e-02  2.545e-01   0.274 0.783948    
+from_date_DOWSaturday        -1.732e-01  2.135e-01  -0.811 0.417272    
+from_date_DOWSunday           2.313e-01  2.436e-01   0.950 0.342316    
+from_date_DOWThursday        -1.160e-01  2.077e-01  -0.559 0.576425    
+from_date_DOWTuesday         -4.203e-02  2.720e-01  -0.155 0.877172    
+from_date_DOWWednesday       -1.378e-01  2.516e-01  -0.548 0.583900    
+from_date_Hour                4.779e-02  8.730e-03   5.474 4.40e-08 ***
+booking_created_DOWMonday    -2.204e-01  2.616e-01  -0.843 0.399376    
+booking_created_DOWSaturday  -2.814e-01  2.200e-01  -1.279 0.200781    
+booking_created_DOWSunday     1.784e-01  2.427e-01   0.735 0.462204    
+booking_created_DOWThursday   8.939e-02  1.975e-01   0.453 0.650809    
+booking_created_DOWTuesday   -5.681e-01  2.834e-01  -2.005 0.045000 *  
+booking_created_DOWWednesday -6.529e-02  2.434e-01  -0.268 0.788528    
+trip_length                   5.068e-05  2.802e-04   0.181 0.856473    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 3084.9  on 5999  degrees of freedom
+Residual deviance: 2651.9  on 5953  degrees of freedom
+AIC: 2745.9
+
+Number of Fisher Scoring iterations: 16
+
+
+Attempting logistic regression prediction...
+Prediction error occurred:
+factor vehicle_model_id has new levels 36 
+
+Logistic Regression could not produce valid predictions.
+This supports the limitation that logistic regression was unstable for this dataset.
+
+============================================================
+12. Final Model Comparison Table
+============================================================
+
+                Model Accuracy Sensitivity Specificity Precision     F1
+1 K-Nearest Neighbors   0.9212      0.0063      0.9995    0.5000 0.0125
+2       Decision Tree   0.9212      0.0000      1.0000        NA     NA
+3            Boosting   0.9232      0.1206      0.9919    0.5588 0.1984
+4 Logistic Regression       NA          NA          NA        NA     NA
+
+Model comparison table saved as: Model_Comparison_Table.csv
+
+============================================================
+13. Saving Gains Charts
+============================================================
+
+Saved gains charts:
+- Gains_Chart_KNN.png
+- Gains_Chart_Decision_Tree.png
+- Gains_Chart_Boosting.png
+- Gains_Chart_Logistic_Regression.png, if logistic regression produced valid predictions
+
+
+============================================================
+14. Final Interpretation for Report
+============================================================
+
+This project analyzed a taxi cancellation prediction problem using data mining methods in R.
+The main business goal was to predict whether a booking would be cancelled so that taxi companies could improve driver allocation and reduce operational inefficiency.
+
+The dataset was highly imbalanced, with most bookings belonging to the non-cancellation class.
+Because of this, accuracy alone is not enough to judge model quality.
+A model can achieve high accuracy by predicting most bookings as non-cancellations, but this may not help the business identify actual cancellation cases.
+
+The models tested included K-Nearest Neighbors, Decision Tree, Boosting, and Logistic Regression.
+Decision Tree is useful because it is easier to interpret.
+Boosting is useful because it combines many weak learners and can capture more complex patterns.
+Logistic Regression was tested as a traditional baseline, but it may struggle when the data contains factor-level issues or unstable predictors.
+
+The final report should focus on the business meaning of the results, not only the technical output.
+The most important implication is that taxi companies should use predictive modeling to identify risky bookings, but they must evaluate models carefully because class imbalance can make accuracy misleading.
